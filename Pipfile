@@ -7,12 +7,14 @@ name = "pypi"
 Faker = "14.2.0"
 Flask = "2.2.2"
 Flask-Migrate = "3.1.0"
-Flask-SQLAlchemy = "2.5.1"
+Flask-SQLAlchemy = "3.0.3"  # Upgrade to a compatible version
+SQLAlchemy = "1.4.46"  
 importlib-resources = "5.10.0"
 ipdb = "0.13.9"
 pytest = "7.1.3"
 sqlalchemy-serializer = "*"
 flask-restful = "*"
+Werkzeug = "2.2.2"
 
 [requires]
-python_full_version = "3.8.13"
+python_full_version = "3.10.12"
