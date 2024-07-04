@@ -17,4 +17,4 @@ flask-restful = "*"
 Werkzeug = "2.2.2"
 
 [requires]
-python_full_version = "3.10.12"
+python_full_version = "3.11.9"

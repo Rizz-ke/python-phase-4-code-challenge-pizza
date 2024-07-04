@@ -4,6 +4,7 @@ from flask_migrate import Migrate
 from flask import Flask, request, make_response, jsonify
 from flask_restful import Api, Resource
 import os
+import warnings
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 DATABASE = os.environ.get("DB_URI", f"sqlite:///{os.path.join(BASE_DIR, 'app.db')}")
@@ -11,7 +12,7 @@ DATABASE = os.environ.get("DB_URI", f"sqlite:///{os.path.join(BASE_DIR, 'app.db'
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["JSONIFY_PRETTYPRINT_REGULAR"] = False
+app.json.compact = False  # Updated config key
 
 migrate = Migrate(app, db)
 
@@ -19,6 +20,8 @@ db.init_app(app)
 
 api = Api(app)
 
+# Suppress SQLAlchemy 2.0 deprecation warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="sqlalchemy")
 
 @app.route("/")
 def index():
@@ -41,7 +44,7 @@ class RestaurantListResource(Resource):
 
 class RestaurantResource(Resource):
     def get(self, id):
-        restaurant = Restaurant.query.get(id)
+        restaurant = db.session.get(Restaurant, id)
         if restaurant is None:
             return make_response(jsonify({"error": "Restaurant not found"}), 404)
         restaurant_dict = restaurant.to_dict()
@@ -52,7 +55,7 @@ class RestaurantResource(Resource):
 
     def patch(self, id):
         data = request.get_json()
-        restaurant = Restaurant.query.get(id)
+        restaurant = db.session.get(Restaurant, id)
         if restaurant is None:
             return make_response(jsonify({"error": "Restaurant not found"}), 404)
         if 'name' in data:
@@ -63,7 +66,7 @@ class RestaurantResource(Resource):
         return make_response(jsonify(restaurant.to_dict()), 200)
 
     def delete(self, id):
-        restaurant = Restaurant.query.get(id)
+        restaurant = db.session.get(Restaurant, id)
         if restaurant is None:
             return make_response(jsonify({"error": "Restaurant not found"}), 404)
         db.session.delete(restaurant)
@@ -87,14 +90,14 @@ class PizzaListResource(Resource):
 
 class PizzaResource(Resource):
     def get(self, id):
-        pizza = Pizza.query.get(id)
+        pizza = db.session.get(Pizza, id)
         if pizza is None:
             return make_response(jsonify({"error": "Pizza not found"}), 404)
         return jsonify(pizza.to_dict())
 
     def patch(self, id):
         data = request.get_json()
-        pizza = Pizza.query.get(id)
+        pizza = db.session.get(Pizza, id)
         if pizza is None:
             return make_response(jsonify({"error": "Pizza not found"}), 404)
         if 'name' in data:
@@ -105,7 +108,7 @@ class PizzaResource(Resource):
         return make_response(jsonify(pizza.to_dict()), 200)
 
     def delete(self, id):
-        pizza = Pizza.query.get(id)
+        pizza = db.session.get(Pizza, id)
         if pizza is None:
             return make_response(jsonify({"error": "Pizza not found"}), 404)
         db.session.delete(pizza)
@@ -128,8 +131,8 @@ class RestaurantPizzaResource(Resource):
             return make_response(jsonify({"errors": ["validation errors"]}), 400)
 
         # Check if restaurant_id and pizza_id are valid
-        restaurant = Restaurant.query.get(data['restaurant_id'])
-        pizza = Pizza.query.get(data['pizza_id'])
+        restaurant = db.session.get(Restaurant, data['restaurant_id'])
+        pizza = db.session.get(Pizza, data['pizza_id'])
 
         if not restaurant:
             return make_response(jsonify({"errors": ["Restaurant not found"]}), 404)
