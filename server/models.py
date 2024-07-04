@@ -59,4 +59,5 @@ class RestaurantPizza(db.Model, SerializerMixin):
         return value
 
     def __repr__(self):
-        return f"<RestaurantPizza ${self.price}>".
+        return f"<RestaurantPizza ${self.price}>"
+        
